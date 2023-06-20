@@ -4,12 +4,12 @@
 
 const { wsWithStatusAndData } = require("../utils/SendResponse");
 
-function checkWin(createArrayCaroNxN, userDefault, n) {
+function checkWin(createArrayCaro, userDefault, n) {
   // Check rows
-  for (let i = 0; i < n; i++) {
+  for (let row = 0; row < n; row++) {
     let count = 0;
-    for (let j = 0; j < n; j++) {
-      if (createArrayCaroNxN[i][j] === userDefault) {
+    for (let col = 0; col < n; col++) {
+      if (createArrayCaro[row][col] === userDefault) {
         count++;
       } else {
         count = 0;
@@ -20,10 +20,10 @@ function checkWin(createArrayCaroNxN, userDefault, n) {
     }
   }
   // Check columns
-  for (let i = 0; i < n; i++) {
+  for (let row = 0; row < n; row++) {
     let count = 0;
-    for (let j = 0; j < n; j++) {
-      if (createArrayCaroNxN[j][i] === userDefault) {
+    for (let col = 0; col < n; col++) {
+      if (createArrayCaro[col][row] === userDefault) {
         count++;
       } else {
         count = 0;
@@ -34,10 +34,10 @@ function checkWin(createArrayCaroNxN, userDefault, n) {
     }
   }
   // Check diagonal
-  for (let i = 0; i < n; i++) {
+  for (let row = 0; row < n; row++) {
     let count = 0;
-    for (let j = 0; j < n; j++) {
-      if (createArrayCaroNxN[i][j] === userDefault) {
+    for (let col = 0; col < n; col++) {
+      if (createArrayCaro[row][col] === userDefault) {
         count++;
       } else {
         count = 0;
@@ -48,10 +48,10 @@ function checkWin(createArrayCaroNxN, userDefault, n) {
     }
   }
   // Check diagonal
-  for (let i = 0; i < n; i++) {
+  for (let row = 0; row < n; row++) {
     let count = 0;
-    for (let j = 0; j < n; j++) {
-      if (createArrayCaroNxN[j][i] === userDefault) {
+    for (let col = 0; col < n; col++) {
+      if (createArrayCaro[col][row] === userDefault) {
         count++;
       } else {
         count = 0;

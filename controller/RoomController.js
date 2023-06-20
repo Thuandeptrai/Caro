@@ -141,7 +141,7 @@ class RoomController {
       this._allRoom,
       this._userModelContain
     );
-    if (!checkCanPlay(room, userModel, ws, "You can't chat now")) {
+    if (!checkCanPlay(room, userModal, ws, "You can't chat now")) {
       return;
     }
     sendSocketFromRoomMember(room.roomMember, "chat", {
