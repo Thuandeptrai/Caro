@@ -1,3 +1,4 @@
+const { DEFAULT_TABLE } = require("../config/CONFIG");
 const RoomModel = require("../models/RoomModel");
 
 function createRoom() {
@@ -5,22 +6,38 @@ function createRoom() {
   roomModel.roomName = "room " + Math.floor(Math.random() * 1000);
   return roomModel;
 }
-function joinRoomAsFirstPlayer(userModal, roomModel) { 
-  roomModel.roomMember.push(userModal);
-  roomModel.userX = userModal;
-  roomModel.turn = userModal;
-  roomModel.roomOwner = userModal;
-  roomModel.status = "waiting";
+function joinRoom(userModal, roomModel, positionId) {
+  if (positionId == 1) {
+    roomModel.roomMember.push(userModal);
+    roomModel.userX = userModal;
+    roomModel.turn = userModal;
+    roomModel.roomOwner = userModal;
+    roomModel.status = "waiting";
+    return roomModel;
+  } else {
+    roomModel.roomMember.push(userModal);
+    roomModel.userO = userModal;
+    roomModel.status = "playing";
+    return roomModel;
+  }
+}
+function resetRoom(roomModel) {
+  roomModel.defaultTable = DEFAULT_TABLE;
+  roomModel.status = "playing";
+  roomModel.turn = roomModel.userX;
+  roomModel.winner = null;
+  roomModel.voteRestart = [];
   return roomModel;
 }
-function joinRoomAsSecondPlayer(userModal, roomModel) {
-  roomModel.roomMember.push(userModal);
-  roomModel.userO = userModal;
-  roomModel.status = "playing";
-  return roomModel;
+function endRoom(roomModel, userModel) {
+  roomModel.status = "end";
+  roomModel.voteRestart = [];
+  roomModel.turn = room.userX;
+  roomModel.winner = userModel;
 }
 module.exports = {
   createRoom,
-  joinRoomAsFirstPlayer,
-  joinRoomAsSecondPlayer,
+  joinRoomAsFirstPlayer: joinRoom,
+  resetRoom,
+  endRoom,
 };

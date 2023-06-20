@@ -1,5 +1,7 @@
 const uuid = require("uuid");
-const { sendNotifyForLogin } = require("../handler/SendNotifyForResponse");
+const {
+  sendNotifyForLogin: sendNotifyForAddToRoom,
+} = require("../handler/SendNotifyForResponse");
 const checkValidTable = require("../handler/CheckValidTable");
 const { checkWin, checkCanPlay } = require("../helper/CheckTable");
 const { wsWithStatusAndData } = require("../utils/SendResponse");
@@ -7,8 +9,10 @@ const { DEFAULT_TABLE, TABLE_SIZE } = require("../config/CONFIG");
 const {
   createRoom,
   joinRoomAsFirstPlayer,
-  joinRoomAsSecondPlayer,
+  resetRoom,
+  endRoom,
 } = require("../services/roomService");
+const { sendSocketFromRoomMember } = require("../services/SocketService");
 // store _allRoom In map
 class RoomController {
   constructor() {
@@ -20,17 +24,16 @@ class RoomController {
     // Applying SOLID
     const keysArray = [...this._allRoom.keys()];
     const lastKey = keysArray[keysArray.length - 1];
-
     if (
       this._allRoom.size === 0 ||
       this._allRoom.get(lastKey)?.roomMember?.length == 2
     ) {
       const mapKey = uuid.v4();
       const createRoomForUser = createRoom(userModal);
-      const JoinRoom = joinRoomAsFirstPlayer(userModal, createRoomForUser);
+      const JoinRoom = joinRoomAsFirstPlayer(userModal, createRoomForUser, 1);
       this._allRoom.set(mapKey, JoinRoom);
       this._wsContain.set(ws, mapKey);
-      ws.send(sendNotifyForLogin(this._allRoom.get(mapKey), userModal));
+      ws.send(sendNotifyForAddToRoom(this._allRoom.get(mapKey), userModal));
     } else {
       let position = lastKey;
       if (this._roomFree.length > 0) {
@@ -38,13 +41,11 @@ class RoomController {
         this._roomFree.shift();
       }
       const getRoomObj = this._allRoom.get(position);
-      const finalObj = joinRoomAsSecondPlayer(userModal, getRoomObj);
+      const finalObj = joinRoomAsFirstPlayer(userModal, getRoomObj, 2);
       this._allRoom.set(position, finalObj);
-      ws.send(sendNotifyForLogin(this._allRoom.get(lastKey), userModal));
+      ws.send(sendNotifyForAddToRoom(this._allRoom.get(lastKey), userModal));
       this._wsContain.set(ws, position);
-      this._allRoom.get(lastKey).roomMember.forEach((userModal) => {
-        userModal.ws.send(wsWithStatusAndData("status", "playing"));
-      });
+      sendSocketFromRoomMember(finalObj.roomMember, "start", `The room ${finalObj.roomName} is ready to play`);
     }
     // Appying Singleton
   }
@@ -71,31 +72,19 @@ class RoomController {
     if (!checkValidTable(ws, defaultTable, position, TABLE_SIZE - 1)) {
       return;
     }
-    
     defaultTable[position.x][position.y] = userModel.userId;
     room.turn = userModel === room.userX ? room.userO : room.userX;
     room.defaultTable = defaultTable;
 
     if (checkWin(defaultTable, userModel.userId, TABLE_SIZE)) {
-      room.status = "end";
-      room.voteRestart = [];
-      room.turn = room.userX;
-      room.winner = userModel;
-      room.roomMember.forEach((userModal) => {
-        userModal.ws.send(
-          wsWithStatusAndData("end", {
-            winner: userModal.userId === userModel.userId ? "you" : "opponent",
-          })
-        );
+      room = endRoom(room);
+      sendSocketFromRoomMember(room.roomMember, "end", {
+        winner: userModel.userId,
       });
     } else {
-      room.roomMember.forEach((userModal) => {
-        userModal.ws.send(
-          wsWithStatusAndData("play", {
-            defaultTable: room.defaultTable,
-            turn: room.turn.userId,
-          })
-        );
+      sendSocketFromRoomMember(room.roomMember, "play", {
+        defaultTable: room.defaultTable,
+        turn: room.turn.userId,
       });
     }
     this._allRoom.set(roomKey, room);
@@ -116,26 +105,14 @@ class RoomController {
     } else {
       room.voteRestart.push(userModel);
       if (room.voteRestart.length === 2) {
-        room.defaultTable = DEFAULT_TABLE;
-        room.status = "playing";
-        room.turn = room.userX;
-        room.winner = null;
-        room.voteRestart = [];
-        room.roomMember.forEach((userModel) => {
-          userModel.ws.send(
-            wsWithStatusAndData("restart", {
-              defaultTable: room.defaultTable,
-              turn: room.turn.userId,
-            })
-          );
+        room = resetRoom(room);
+        sendSocketFromRoomMember(room.roomMember, "restart", {
+          defaultTable: room.defaultTable,
+          turn: room.turn.userId,
         });
       } else {
-        room.roomMember.forEach((userModel) => {
-          userModel.ws.send(
-            wsWithStatusAndData("vote", {
-              message: "You voted",
-            })
-          );
+        sendSocketFromRoomMember(room.roomMember, "vote", {
+          message: "You voted",
         });
       }
     }
@@ -147,15 +124,10 @@ class RoomController {
       return;
     }
 
-    room.roomMember.forEach((userModel) => {
-      userModel.ws.send(
-        wsWithStatusAndData("chat", {
-          message,
-          userId: userModal.userId,
-        })
-      );
+    sendSocketFromRoomMember(room.roomMember, "chat", {
+      message,
+      userId: userModal.userId,
     });
   }
- 
 }
 module.exports = new RoomController();

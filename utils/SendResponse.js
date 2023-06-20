@@ -5,12 +5,12 @@
 /* eslint-disable no-undef */
 /* eslint-disable prettier/prettier */
 // eslint-disable-next-line prettier/prettier
-function wsWithStatusAndData(status, data) {
+function wsWithStatusAndData(status, finalData) {
   return JSON.stringify({
     type: status,
-    data: data,
+    Data:finalData,
   });
 }
-module.exports ={
-    wsWithStatusAndData
-}
+module.exports = {
+  wsWithStatusAndData,
+};
