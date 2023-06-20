@@ -17,6 +17,7 @@ class RoomController {
     this._roomFree = [];
   }
   async createRoom(userModal, ws) {
+    // Applying SOLID
     const keysArray = [...this._allRoom.keys()];
     const lastKey = keysArray[keysArray.length - 1];
 
@@ -70,6 +71,7 @@ class RoomController {
     if (!checkValidTable(ws, defaultTable, position, TABLE_SIZE - 1)) {
       return;
     }
+    
     defaultTable[position.x][position.y] = userModel.userId;
     room.turn = userModel === room.userX ? room.userO : room.userX;
     room.defaultTable = defaultTable;

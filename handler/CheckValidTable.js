@@ -1,6 +1,3 @@
-/* eslint-disable quotes */
-/* eslint-disable no-var */
-/* eslint-disable prettier/prettier */
 const { notifyWithData } = require("./SendNotifyForResponse");
 
 function checkValidTable(ws, defaultTable, position, n) {

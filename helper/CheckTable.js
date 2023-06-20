@@ -4,7 +4,6 @@
 
 const { wsWithStatusAndData } = require("../utils/SendResponse");
 
-// Check win nxn
 function checkWin(createArrayCaroNxN,userDefault ,n) {
   // Check rows
   for(let i = 0; i < n; i++){
