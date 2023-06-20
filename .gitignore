@@ -1,0 +1,2 @@
+/node_modules
+# Remove node_modules folder from your project directory and run npm install again.
