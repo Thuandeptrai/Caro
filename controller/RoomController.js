@@ -8,16 +8,17 @@ const { wsWithStatusAndData } = require("../utils/SendResponse");
 const { DEFAULT_TABLE, TABLE_SIZE } = require("../config/CONFIG");
 const {
   createRoom,
-  joinRoomAsFirstPlayer,
   resetRoom,
   endRoom,
+  joinRoom,
+  getRoomFromUserModel,
 } = require("../services/roomService");
 const { sendSocketFromRoomMember } = require("../services/SocketService");
 // store _allRoom In map
 class RoomController {
   constructor() {
     this._allRoom = new Map();
-    this._wsContain = new Map();
+    this._userModelContain = new Map();
     this._roomFree = [];
   }
   async createRoom(userModal, ws) {
@@ -30,9 +31,9 @@ class RoomController {
     ) {
       const mapKey = uuid.v4();
       const createRoomForUser = createRoom(userModal);
-      const JoinRoom = joinRoomAsFirstPlayer(userModal, createRoomForUser, 1);
+      const JoinRoom = joinRoom(userModal, createRoomForUser, 1);
       this._allRoom.set(mapKey, JoinRoom);
-      this._wsContain.set(ws, mapKey);
+      this._userModelContain.set(userModal, mapKey);
       ws.send(sendNotifyForAddToRoom(this._allRoom.get(mapKey), userModal));
     } else {
       let position = lastKey;
@@ -41,30 +42,35 @@ class RoomController {
         this._roomFree.shift();
       }
       const getRoomObj = this._allRoom.get(position);
-      const finalObj = joinRoomAsFirstPlayer(userModal, getRoomObj, 2);
+      const finalObj = joinRoom(userModal, getRoomObj, 2);
       this._allRoom.set(position, finalObj);
       ws.send(sendNotifyForAddToRoom(this._allRoom.get(lastKey), userModal));
-      this._wsContain.set(ws, position);
-      sendSocketFromRoomMember(finalObj.roomMember, "start", `The room ${finalObj.roomName} is ready to play`);
+      this._userModelContain.set(userModal, position);
+      sendSocketFromRoomMember(
+        finalObj.roomMember,
+        "start",
+        `The room ${finalObj.roomName} is ready to play`
+      );
     }
     // Appying Singleton
   }
-  async leaveRoom(ws) {
-    const roomKey = this._wsContain.get(ws);
-    const room = this._allRoom.get(roomKey);
-    const position = room?.roomMember?.indexOf(ws);
-    room.roomMember?.splice(position, 1);
+  async leaveRoom(userModel) {
+    let room = getRoomFromUserModel(userModel, this._allRoom);
+    const position = room?.roomMember?.indexOf(userModel);
+    room?.roomMember?.splice(position, 1);
     if (room.roomMember?.length === 0) {
       this._allRoom?.delete(roomKey);
       this._roomFree?.slice(this._roomFree.indexOf(roomKey), 1);
     } else {
       this._allRoom.set(roomKey, room);
+      sendSocketFromRoomMember(room.roomMember, "leave", {
+        message: `${userModel.userId} has left the room`,
+      });
       this._roomFree.push(roomKey);
     }
   }
   async playChess(ws, position, userModel) {
-    const roomKey = this._wsContain.get(ws);
-    const room = this._allRoom.get(roomKey);
+    let room = getRoomFromUserModel(userModel, this._allRoom);
     if (!checkCanPlay(room, userModel, ws, "You can't play now")) {
       return;
     }
@@ -90,8 +96,7 @@ class RoomController {
     this._allRoom.set(roomKey, room);
   }
   async voteRestart(ws, userModel) {
-    const roomKey = this._wsContain.get(ws);
-    const room = this._allRoom.get(roomKey);
+    let room = getRoomFromUserModel(userModel, this._allRoom);
     if (!checkCanPlay(room, userModel, ws, "You can't vote now")) {
       return;
     }
@@ -118,12 +123,10 @@ class RoomController {
     }
   }
   async chatRoom(ws, message, userModal) {
-    const roomKey = this._wsContain.get(ws);
-    const room = this._allRoom.get(roomKey);
+    let room = getRoomFromUserModel(userModal, this._allRoom);
     if (!checkCanPlay(room, userModel, ws, "You can't chat now")) {
       return;
     }
-
     sendSocketFromRoomMember(room.roomMember, "chat", {
       message,
       userId: userModal.userId,

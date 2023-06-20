@@ -32,12 +32,19 @@ function resetRoom(roomModel) {
 function endRoom(roomModel, userModel) {
   roomModel.status = "end";
   roomModel.voteRestart = [];
-  roomModel.turn = room.userX;
+  roomModel.turn = roomModel.userX;
   roomModel.winner = userModel;
+  return roomModel;
+}
+function getRoomFromUserModel(userModel, allRoom) {
+  const roomKey = allRoom.get(userModel);
+  const room = allRoom.get(roomKey);
+  return room;
 }
 module.exports = {
   createRoom,
-  joinRoomAsFirstPlayer: joinRoom,
+   joinRoom,
   resetRoom,
   endRoom,
+  getRoomFromUserModel,
 };

@@ -94,7 +94,7 @@ wss.on("connection", function (ws) {
         try {
           const { message } = parseMessage.data;
           const   userModal = UserController.getUserByWs(ws);
-          await RoomController.chatRoom(ws, message, userId);
+          await RoomController.chatRoom(ws, message, userModal);
         } catch (err) {
           console.log(err);
         }
@@ -105,9 +105,9 @@ wss.on("connection", function (ws) {
 
   ws.on("close", function () {
     // Remove
-    const userObj = UserController.getUserByWs(ws);
-    if (userObj) {
-      RoomController.leaveRoom(ws, userObj);
+    const userModel = UserController.getUserByWs(ws);
+    if (userModel) {
+      RoomController.leaveRoom(userModel);
       UserController.removeUser(ws);
     }
   });
