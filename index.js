@@ -103,6 +103,7 @@ wss.on("connection", function (ws) {
   ws.on("close", function () {
     // Remove
     const userModel = UserController.getUserByWs(ws);
+    console.log("UserModel", userModel);
     if (userModel) {
       RoomController.leaveRoom(userModel);
       UserController.removeUser(ws);

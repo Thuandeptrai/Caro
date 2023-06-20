@@ -36,14 +36,15 @@ function endRoom(roomModel, userModel) {
   roomModel.winner = userModel;
   return roomModel;
 }
-function getRoomFromUserModel(userModel, allRoom) {
-  const roomKey = allRoom.get(userModel);
+function getRoomFromUserModel(userModel, allRoom, userModelContain) {
+  const roomKey = userModelContain.get(userModel);
   const room = allRoom.get(roomKey);
   return room;
 }
+
 module.exports = {
   createRoom,
-   joinRoom,
+  joinRoom,
   resetRoom,
   endRoom,
   getRoomFromUserModel,

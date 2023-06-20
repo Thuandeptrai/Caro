@@ -5,7 +5,7 @@ const {
 const checkValidTable = require("../handler/CheckValidTable");
 const { checkWin, checkCanPlay } = require("../helper/CheckTable");
 const { wsWithStatusAndData } = require("../utils/SendResponse");
-const {  TABLE_SIZE } = require("../config/CONFIG");
+const { TABLE_SIZE } = require("../config/CONFIG");
 const {
   createRoom,
   resetRoom,
@@ -14,6 +14,7 @@ const {
   getRoomFromUserModel,
 } = require("../services/roomService");
 const { sendSocketFromRoomMember } = require("../services/SocketService");
+const { getByValue } = require("../utils/GetKeyByValue");
 // store _allRoom In map
 class RoomController {
   constructor() {
@@ -54,7 +55,12 @@ class RoomController {
     }
   }
   async leaveRoom(userModel) {
-    let room = getRoomFromUserModel(userModel, this._allRoom);
+    let room = getRoomFromUserModel(
+      userModel,
+      this._allRoom,
+      this._userModelContain
+    );
+    let roomKey = getByValue(this._allRoom, room);
     const position = room?.roomMember?.indexOf(userModel);
     room?.roomMember?.splice(position, 1);
     if (room.roomMember?.length === 0) {
@@ -69,7 +75,11 @@ class RoomController {
     }
   }
   async playChess(ws, position, userModel) {
-    let room = getRoomFromUserModel(userModel, this._allRoom);
+    let room = getRoomFromUserModel(
+      userModel,
+      this._allRoom,
+      this._userModelContain
+    );
     if (!checkCanPlay(room, userModel, ws, "You can't play now")) {
       return;
     }
@@ -95,7 +105,11 @@ class RoomController {
     this._allRoom.set(roomKey, room);
   }
   async voteRestart(ws, userModel) {
-    let room = getRoomFromUserModel(userModel, this._allRoom);
+    let room = getRoomFromUserModel(
+      userModel,
+      this._allRoom,
+      this._userModelContain
+    );
     if (!checkCanPlay(room, userModel, ws, "You can't vote now")) {
       return;
     }
@@ -122,7 +136,11 @@ class RoomController {
     }
   }
   async chatRoom(ws, message, userModal) {
-    let room = getRoomFromUserModel(userModal, this._allRoom);
+    let room = getRoomFromUserModel(
+      userModal,
+      this._allRoom,
+      this._userModelContain
+    );
     if (!checkCanPlay(room, userModel, ws, "You can't chat now")) {
       return;
     }
