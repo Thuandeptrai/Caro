@@ -5,7 +5,7 @@ const {
 const checkValidTable = require("../handler/CheckValidTable");
 const { checkWin, checkCanPlay } = require("../helper/CheckTable");
 const { wsWithStatusAndData } = require("../utils/SendResponse");
-const { DEFAULT_TABLE, TABLE_SIZE } = require("../config/CONFIG");
+const {  TABLE_SIZE } = require("../config/CONFIG");
 const {
   createRoom,
   resetRoom,
@@ -52,7 +52,6 @@ class RoomController {
         `The room ${finalObj.roomName} is ready to play`
       );
     }
-    // Appying Singleton
   }
   async leaveRoom(userModel) {
     let room = getRoomFromUserModel(userModel, this._allRoom);

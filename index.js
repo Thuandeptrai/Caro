@@ -6,13 +6,10 @@ const uuid = require("uuid");
 const UserModel = require("./models/UserModel");
 const bcryptjs = require("bcryptjs");
 const AuthController = require("./controller/AuthController");
-
 const { createServer } = require("http");
-const { WebSocketServer } = require("ws")
+const { WebSocketServer } = require("ws");
 const RoomController = require("./controller/RoomController");
-const {
-  notifyWithData,
-} = require("./handler/SendNotifyForResponse");
+const { notifyWithData } = require("./handler/SendNotifyForResponse");
 const { SQLCONFIG } = require("./config/CONFIG");
 const UserController = require("./controller/UserController");
 const { wsWithStatusAndData } = require("./utils/SendResponse");
@@ -55,7 +52,7 @@ wss.on("connection", function (ws) {
             data.password,
             ws
           );
-          
+
           UserController.addNewUser(ws, userModel);
           RoomController.createRoom(userModel, ws);
         } catch (err) {
@@ -93,7 +90,7 @@ wss.on("connection", function (ws) {
       case "chat": {
         try {
           const { message } = parseMessage.data;
-          const   userModal = UserController.getUserByWs(ws);
+          const userModal = UserController.getUserByWs(ws);
           await RoomController.chatRoom(ws, message, userModal);
         } catch (err) {
           console.log(err);
